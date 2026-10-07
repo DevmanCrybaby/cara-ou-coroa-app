@@ -84,8 +84,8 @@ app/src/main/
 
 ## 📄 Licença
 
-Este projeto está sob a licença [MIT](LICENSE) - consulte o arquivo de licença para obter mais detalhes.
+Este projeto está sob a licença [Apache](LICENSE) - consulte o arquivo de licença para obter mais detalhes.
 
 ---
 
-Feito com ❤️ por [Seu Nome](https://github.com/SEU_USUARIO).
+Feito com ❤️ por [DevmanCrybaby](https://github.com/SEU_USUARIO).
