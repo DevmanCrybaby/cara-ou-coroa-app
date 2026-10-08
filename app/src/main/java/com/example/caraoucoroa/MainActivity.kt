@@ -8,6 +8,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +22,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
@@ -40,6 +45,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -50,9 +56,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -107,10 +122,17 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     var somHabilitado by remember { mutableStateOf(true) }
+    val focusManager = LocalFocusManager.current
 
     // Box para sobrepor o ícone no canto superior direito
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit){
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            }
     ) {
     Column(
         modifier = modifier
@@ -162,28 +184,88 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
         if (modoMultiplo) {
             // Seletor de quantidade (O código que você já tem do Row com AutoRepeatButton)
             Text(text = "Quantidade de lançamentos:", fontSize = 16.sp)
+
+            var textoQuantidade by remember(quantidadeLancamentos) {
+                mutableStateOf(quantidadeLancamentos.toString())}
+
+            val validarEConfirmar = {
+                val apenasNumeros = textoQuantidade.filter { it.isDigit()}
+                val numeros = apenasNumeros.toIntOrNull() ?: quantidadeLancamentos
+                //Corrige para o interavalo entre 2 e 200
+                val valorCorrigido = numeros.coerceIn(2, 200)
+
+                quantidadeLancamentos = valorCorrigido
+                textoQuantidade = valorCorrigido.toString()
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 AutoRepeatButton(
-                    onTick = { if (quantidadeLancamentos > 2) quantidadeLancamentos-- },
+                    onTick = {
+                        if (quantidadeLancamentos > 2) {
+                            quantidadeLancamentos--
+                            textoQuantidade = quantidadeLancamentos.toString()
+                        }
+                    },
                     enabled = quantidadeLancamentos > 2
-                ) { Text("-" , fontSize = 24.sp)}
+                ) { Text("-", fontSize = 24.sp) }
 
-                Text(
-                    text = "$quantidadeLancamentos",
-                    fontSize = 20.sp,
-                    modifier = Modifier.widthIn(min = 60.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                // Campo sem bordas e sem marcador de seleção
+                CompositionLocalProvider(
+                    LocalTextSelectionColors provides TextSelectionColors(
+                        handleColor = Color.Transparent,
+                        backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    )
+                ) {
+                    BasicTextField(
+                        value = textoQuantidade,
+                        onValueChange = { novoTexto ->
+                            val apenasNumeros = novoTexto.filter { it.isDigit() }
 
+                            if (apenasNumeros.length <= 4) {
+                                textoQuantidade = apenasNumeros
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done // Define a tecla "OK" no teclado
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                validarEConfirmar()
+                                focusManager.clearFocus() // Esconde o teclado ao apertar OK
+                            }
+                        ),
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .width(60.dp)
+                            .onFocusChanged { focusState ->
+                                // Se o usuário clicar fora mantendo o campo vazio, restaura o número 2
+                                if (!focusState.isFocused) {
+                                    validarEConfirmar()
+                                }
+                            }
+                    )
+                }
                 AutoRepeatButton(
-                    onTick = { if (quantidadeLancamentos < 200) quantidadeLancamentos++},
-                    enabled = quantidadeLancamentos < 500
+                    onTick = {
+                        validarEConfirmar()
+                        if (quantidadeLancamentos < 200) {
+                            quantidadeLancamentos++
+                            textoQuantidade = quantidadeLancamentos.toString()
+                        }
+                    },
+                    enabled = quantidadeLancamentos < 200
                 ) { Text("+", fontSize = 24.sp) }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         } else {
             // Opções de Limite Consecutivo
