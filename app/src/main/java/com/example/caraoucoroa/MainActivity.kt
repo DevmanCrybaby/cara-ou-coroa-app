@@ -123,6 +123,17 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
 
     var somHabilitado by remember { mutableStateOf(true) }
     val focusManager = LocalFocusManager.current
+    var textoQuantidade by remember {mutableStateOf("2")}
+
+    val validarEConfirmar = {
+        val apenasNumeros = textoQuantidade.filter { it.isDigit()}
+        val numeros = apenasNumeros.toIntOrNull() ?: quantidadeLancamentos
+        //Corrige para o interavalo entre 2 e 200
+        val valorCorrigido = numeros.coerceIn(2, 200)
+
+        quantidadeLancamentos = valorCorrigido
+        textoQuantidade = valorCorrigido.toString()
+    }
 
     // Box para sobrepor o ícone no canto superior direito
     Box(
@@ -185,18 +196,6 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             // Seletor de quantidade (O código que você já tem do Row com AutoRepeatButton)
             Text(text = "Quantidade de lançamentos:", fontSize = 16.sp)
 
-            var textoQuantidade by remember(quantidadeLancamentos) {
-                mutableStateOf(quantidadeLancamentos.toString())}
-
-            val validarEConfirmar = {
-                val apenasNumeros = textoQuantidade.filter { it.isDigit()}
-                val numeros = apenasNumeros.toIntOrNull() ?: quantidadeLancamentos
-                //Corrige para o interavalo entre 2 e 200
-                val valorCorrigido = numeros.coerceIn(2, 200)
-
-                quantidadeLancamentos = valorCorrigido
-                textoQuantidade = valorCorrigido.toString()
-            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -298,6 +297,9 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
+                // Esconde o teclado
+                focusManager.clearFocus()
+
                 if (somHabilitado) {
                     tocarSom(context)
                 }
@@ -305,6 +307,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
                 anguloRotacao += 1800f
 
                 if (modoMultiplo) {
+                    validarEConfirmar()
                     var caras = 0
                     var coroas = 0
                     repeat(quantidadeLancamentos) {
