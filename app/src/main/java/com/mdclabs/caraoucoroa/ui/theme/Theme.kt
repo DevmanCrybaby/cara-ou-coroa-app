@@ -1,4 +1,4 @@
-package com.example.caraoucoroa.ui.theme
+package com.mdclabs.caraoucoroa.ui.theme
 
 import android.app.Activity
 import android.os.Build

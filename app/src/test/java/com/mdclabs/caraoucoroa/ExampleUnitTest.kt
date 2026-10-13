@@ -1,4 +1,4 @@
-package com.example.caraoucoroa
+package com.mdclabs.caraoucoroa
 
 import org.junit.Test
 

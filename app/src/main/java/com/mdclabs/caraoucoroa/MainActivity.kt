@@ -1,4 +1,4 @@
-package com.example.caraoucoroa
+package com.mdclabs.caraoucoroa
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -72,7 +72,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.caraoucoroa.ui.theme.CaraOuCoroaTheme
+import com.mdclabs.caraoucoroa.ui.theme.CaraOuCoroaTheme
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -356,7 +356,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             Text(text = "Lançar!", fontSize = 20.sp)
         }*/
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         //Quadro de pontuação
         Card(

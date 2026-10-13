@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.caraoucoroa"
+    namespace = "com.mdclabs.caraoucoroa"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.caraoucoroa"
+        applicationId = "com.mdclabs.caraoucoroa"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
