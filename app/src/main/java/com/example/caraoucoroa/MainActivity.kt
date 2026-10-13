@@ -8,6 +8,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -135,6 +136,53 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
         textoQuantidade = valorCorrigido.toString()
     }
 
+    val lancarMoeda = {
+        focusManager.clearFocus() // Esconde o teclado se estiver aberto
+
+        if (somHabilitado) {
+            tocarSom(context)
+        }
+
+        anguloRotacao += 1800f
+
+        if (modoMultiplo) {
+            validarEConfirmar()
+
+            var caras = 0
+            var coroas = 0
+            repeat(quantidadeLancamentos) {
+                if (Random.nextInt(2) == 0) caras++ else coroas++
+            }
+            contadorCaras += caras
+            contadorCoroas += coroas
+            resultado = if (caras >= coroas) R.drawable.moeda_cara else R.drawable.moeda_coroa
+            textoResultado = "$caras Caras, $coroas Coroas"
+        } else {
+            var sorteio = Random.nextInt(2)
+
+            if (limitarConsecutivos && sorteio == ultimoResultado && repeticoesAtuais >= maxConsecutivos - 1) {
+                sorteio = if (sorteio == 0) 1 else 0
+            }
+
+            if (sorteio == ultimoResultado) {
+                repeticoesAtuais++
+            } else {
+                ultimoResultado = sorteio
+                repeticoesAtuais = 1
+            }
+
+            if (sorteio == 0) {
+                resultado = R.drawable.moeda_cara
+                textoResultado = "Cara!"
+                contadorCaras++
+            } else {
+                resultado = R.drawable.moeda_coroa
+                textoResultado = "Coroa!"
+                contadorCoroas++
+            }
+        }
+    }
+
     // Box para sobrepor o ícone no canto superior direito
     Box(
         modifier = modifier
@@ -163,10 +211,15 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             painter = painterResource(id = resultado),
             contentDescription = "Moeda",
             modifier = Modifier
-                .size(180.dp)
+                .size(190.dp)
                 .graphicsLayer {
                     rotationY = anguloAnimado
                     cameraDistance = 12f * density
+                }.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ){
+                    lancarMoeda()
                 }
         )
 
@@ -295,60 +348,13 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             }
         }
 
-        Button(
+        /*Button(
             onClick = {
-                // Esconde o teclado
-                focusManager.clearFocus()
-
-                if (somHabilitado) {
-                    tocarSom(context)
-                }
-
-                anguloRotacao += 1800f
-
-                if (modoMultiplo) {
-                    validarEConfirmar()
-                    var caras = 0
-                    var coroas = 0
-                    repeat(quantidadeLancamentos) {
-                        if (Random.nextInt(2) == 0) caras++ else coroas++
-                    }
-                    contadorCaras += caras
-                    contadorCoroas += coroas
-                    resultado = if (caras >= coroas) R.drawable.moeda_cara else R.drawable.moeda_coroa
-                    textoResultado = "$caras Caras, $coroas Coroas"
-                } else {
-                    // Lógica 1 por 1 com proteção de repetição
-                    var sorteio = Random.nextInt(2)
-
-                    if (limitarConsecutivos && sorteio == ultimoResultado && repeticoesAtuais >= maxConsecutivos - 1) {
-                        // Força a inversão do resultado se atingiu o limite
-                        sorteio = if (sorteio == 0) 1 else 0
-                    }
-
-                    // Atualiza rastreamento de repetições
-                    if (sorteio == ultimoResultado) {
-                        repeticoesAtuais++
-                    } else {
-                        ultimoResultado = sorteio
-                        repeticoesAtuais = 1
-                    }
-
-                    if (sorteio == 0) {
-                        resultado = R.drawable.moeda_cara
-                        textoResultado = "Cara!"
-                        contadorCaras++
-                    } else {
-                        resultado = R.drawable.moeda_coroa
-                        textoResultado = "Coroa!"
-                        contadorCoroas++
-                    }
-                }
-            },
+                lancarMoeda() },
             modifier = Modifier.fillMaxWidth(0.7f)
         ) {
             Text(text = "Lançar!", fontSize = 20.sp)
-        }
+        }*/
 
         Spacer(modifier = Modifier.height(32.dp))
 
