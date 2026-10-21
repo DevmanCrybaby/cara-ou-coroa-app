@@ -53,6 +53,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +74,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mdclabs.caraoucoroa.ui.theme.CaraOuCoroaTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -136,14 +139,37 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
         textoQuantidade = valorCorrigido.toString()
     }
 
+    val coroutineScope = rememberCoroutineScope()
+    var estaGirando by remember { mutableStateOf(false) }
+
     val lancarMoeda = {
         focusManager.clearFocus() // Esconde o teclado se estiver aberto
 
-        if (somHabilitado) {
-            tocarSom(context)
-        }
+        // Se a moeda não estiver girando no momento, executa
+        if (!estaGirando) {
+            estaGirando = true
+            focusManager.clearFocus() // Esconde o teclado se estiver aberto
 
-        anguloRotacao += 1800f
+            if (somHabilitado) {
+                tocarSom(context)
+            }
+
+            // Inicia a rotação visual
+            anguloRotacao += 1800f
+
+            coroutineScope.launch {
+                val tempoInicio = System.currentTimeMillis()
+                val duracaoGiro = 800L // Duração de 1.1 segundos
+
+                // Enquanto estiver girando, fica alternando a imagem a cada 120ms
+                while (System.currentTimeMillis() - tempoInicio < duracaoGiro) {
+                    delay(120.milliseconds)
+                    resultado = if (resultado == R.drawable.moeda_cara) {
+                        R.drawable.moeda_coroa
+                    } else {
+                        R.drawable.moeda_cara
+                    }
+                }
 
         if (modoMultiplo) {
             validarEConfirmar()
@@ -181,7 +207,12 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
                 contadorCoroas++
             }
         }
+
+                estaGirando = false
+            }
+        }
     }
+
 
     // Box para sobrepor o ícone no canto superior direito
     Box(
@@ -347,14 +378,6 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
                 }
             }
         }
-
-        /*Button(
-            onClick = {
-                lancarMoeda() },
-            modifier = Modifier.fillMaxWidth(0.7f)
-        ) {
-            Text(text = "Lançar!", fontSize = 20.sp)
-        }*/
 
         Spacer(modifier = Modifier.height(10.dp))
 
