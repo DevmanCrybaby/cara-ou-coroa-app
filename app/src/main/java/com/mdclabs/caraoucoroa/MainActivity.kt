@@ -1,6 +1,9 @@
 package com.mdclabs.caraoucoroa
 
+import android.app.Activity
+import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,18 +15,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,18 +27,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -63,42 +47,116 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
+import com.mdclabs.caraoucoroa.R
 import com.mdclabs.caraoucoroa.ui.theme.CaraOuCoroaTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.concurrent.thread
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MobileAds.initialize(this) {}
         enableEdgeToEdge()
         setContent {
             CaraOuCoroaTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CaraOuCoroa(
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                CaraOuCoroaApp()
             }
         }
     }
 }
 
 @Composable
-fun CaraOuCoroa(modifier: Modifier = Modifier) {
+fun CaraOuCoroaApp() {
+    val context = LocalContext.current
+    val activity = context as? Activity
+
+    var semAnuncios24h by remember { mutableStateOf(isSemAnuncios24hAtivo(context)) }
+    var progressoAnunciosAssistidos by remember { mutableIntStateOf(0) }
+
+    val assistirAnuncioRecompensa = {
+        if (mInterstitialAd != null && activity != null) {
+            mInterstitialAd?.show(activity)
+            carregarInterstitial(context)
+
+            progressoAnunciosAssistidos++
+
+            if (progressoAnunciosAssistidos >= 2) {
+                ativar24hSemAnuncios(context)
+                semAnuncios24h = true
+                progressoAnunciosAssistidos = 0
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.anuncios_desativados_sucesso),
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.anuncio_assistido_1),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.carregando_video),
+                Toast.LENGTH_SHORT
+            ).show()
+            carregarInterstitial(context)
+        }
+    }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            if (!semAnuncios24h) {
+                AdBannerWithRewardFrame(
+                    semAnunciosAtivo = semAnuncios24h,
+                    progressoAnuncios = progressoAnunciosAssistidos,
+                    onAssistirAnuncioClique = { assistirAnuncioRecompensa() }
+                )
+            }
+        }
+    ) { innerPadding ->
+        CaraOuCoroa(
+            modifier = Modifier.padding(innerPadding),
+            semAnuncios24h = semAnuncios24h
+        )
+    }
+}
+
+@Composable
+fun CaraOuCoroa(
+    modifier: Modifier = Modifier,
+    semAnuncios24h: Boolean = false
+) {
+    val textoInicial = stringResource(R.string.gire_moeda)
     var resultado by remember { mutableIntStateOf(R.drawable.moeda_cara) }
-    var textoResultado by remember { mutableStateOf("Jogue a moeda!") }
+    var textoResultado by remember { mutableStateOf(textoInicial) }
 
     //Contadores
     var contadorCaras by remember { mutableIntStateOf(0) }
@@ -124,6 +182,17 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
     )
 
     val context = LocalContext.current
+    val activity = context as? Activity
+
+    var contadorParaAnuncio by remember {mutableIntStateOf(0)}
+    var proximoAnuncioEm by remember {mutableIntStateOf(5)}
+
+    // Carrega o primeiro anuncio assim que a tela abre
+    LaunchedEffect(Unit) {
+        if (!semAnuncios24h) {
+            carregarInterstitial(context)
+        }
+    }
 
     var somHabilitado by remember { mutableStateOf(true) }
     val focusManager = LocalFocusManager.current
@@ -156,6 +225,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
 
             // Inicia a rotação visual
             anguloRotacao += 1800f
+            textoResultado = context.getString(R.string.girando)
 
             coroutineScope.launch {
                 val tempoInicio = System.currentTimeMillis()
@@ -182,7 +252,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             contadorCaras += caras
             contadorCoroas += coroas
             resultado = if (caras >= coroas) R.drawable.moeda_cara else R.drawable.moeda_coroa
-            textoResultado = "$caras Caras, $coroas Coroas"
+            textoResultado = context.getString(R.string.resultado_multiplo, caras, coroas)
         } else {
             var sorteio = Random.nextInt(2)
 
@@ -199,14 +269,31 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
 
             if (sorteio == 0) {
                 resultado = R.drawable.moeda_cara
-                textoResultado = "Cara!"
+                textoResultado = context.getString(R.string.cara)
                 contadorCaras++
             } else {
                 resultado = R.drawable.moeda_coroa
-                textoResultado = "Coroa!"
+                textoResultado = context.getString(R.string.coroa)
                 contadorCoroas++
             }
         }
+
+                // Incrementa o contador de jogadas se não estiver no modo 24h sem anúncios
+                if (!semAnuncios24h) {
+                    contadorParaAnuncio++
+
+                    if (contadorParaAnuncio >= proximoAnuncioEm) {
+                        contadorParaAnuncio = 0
+                        proximoAnuncioEm = Random.nextInt(3, 9)
+
+                        mInterstitialAd?.let { ad ->
+                            activity?.let { act ->
+                                ad.show(act)
+                                carregarInterstitial(context)
+                            }
+                        }
+                    }
+                }
 
                 estaGirando = false
             }
@@ -214,7 +301,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
     }
 
 
-    // Box para sobrepor o ícone no canto superior direito
+    // Box para sobrepor o ícone do alto-falante
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -225,7 +312,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             }
     ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
@@ -264,21 +351,21 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             FilterChip(
                 selected = !modoMultiplo,
                 onClick = { modoMultiplo = false },
-                label = { Text("Único") }
+                label = { Text(stringResource(R.string.modo_unico)) }
             )
             Spacer(modifier = Modifier.width(8.dp))
             FilterChip(
                 selected = modoMultiplo,
                 onClick = { modoMultiplo = true },
-                label = { Text("Múltiplo") }
+                label = { Text(stringResource(R.string.modo_multiplo)) }
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (modoMultiplo) {
-            // Seletor de quantidade (O código que você já tem do Row com AutoRepeatButton)
-            Text(text = "Quantidade de lançamentos:", fontSize = 16.sp)
+            // Seletor de quantidade
+            Text(text = stringResource(R.string.quantidade_lancamentos), fontSize = 16.sp)
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -353,7 +440,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
         } else {
             // Opções de Limite Consecutivo
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Evitar repetições longas", fontSize = 16.sp)
+                Text(text = stringResource(R.string.evitar_repeticoes), fontSize = 16.sp)
                 Switch(
                     checked = limitarConsecutivos,
                     onCheckedChange = { limitarConsecutivos = it },
@@ -365,7 +452,7 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
 
             if (limitarConsecutivos) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Máximo consecutivo: $maxConsecutivos")
+                    Text(stringResource(R.string.maximo_consecutivo, maxConsecutivos))
                     Slider(
                         value = maxConsecutivos.toFloat(),
                         onValueChange = { maxConsecutivos = it.toInt() },
@@ -390,8 +477,8 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                Text(text = "Caras: $contadorCaras", fontSize = 18.sp)
-                Text(text = "Coroas: $contadorCoroas", fontSize = 18.sp)
+                Text(text = stringResource(R.string.placar_caras, contadorCaras), fontSize = 18.sp)
+                Text(text = stringResource(R.string.placar_coroas, contadorCoroas), fontSize = 18.sp)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -400,10 +487,10 @@ fun CaraOuCoroa(modifier: Modifier = Modifier) {
             TextButton(onClick = {
                 contadorCaras = 0
                 contadorCoroas = 0
-                textoResultado = "Jogue a moeda!"
+                textoResultado = textoInicial
                 resultado = R.drawable.moeda_cara
             }) {
-                Text(text = "Zerar Placar", color = MaterialTheme.colorScheme.error)
+                Text(text = stringResource(R.string.zerar_placar), color = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -442,12 +529,12 @@ fun AutoRepeatButton(
         if (isPressed){
             // Aguarda um tempo inicial (ex: 400ms) para ter certeza que é um "long press"
             // Isso evita que o loop dispare junto com o clique individual
-            kotlinx.coroutines.delay(400.milliseconds)
+            delay(400.milliseconds)
 
             var delayTime = 200L // 200ms entre incrementos
             while (true) {
                 onTick()
-                kotlinx.coroutines.delay(delayTime.milliseconds)
+                delay(delayTime.milliseconds)
                 // Acelera o incremento após os primeiros cliques
                 if (delayTime > 50L) delayTime -= 10L
             }
@@ -461,6 +548,119 @@ fun AutoRepeatButton(
     ){
         content()
     }
+}
+
+@Composable
+fun BannerAdView(modifier: Modifier = Modifier) {
+    // ID do bloco de anúncio de Banner de TESTE oficial do AdMob
+    val testAdUnitId = "ca-app-pub-3940256099942544/6300978111"
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            // Banner Adaptativo (Anchored Adaptive Banner) para ocupar 100% da largura da tela
+            val adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+            AdView(context).apply {
+                setAdSize(adSize)
+                adUnitId = testAdUnitId
+                loadAd(AdRequest.Builder().build())
+            }
+        }
+    )
+}
+
+private const val PREFS_NAME = "cara_ou_coroa_prefs"
+private const val KEY_ADS_FREE_UNTIL = "ads_free_until_timestamp"
+
+fun isSemAnuncios24hAtivo(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val timestampExpiracao = prefs.getLong(KEY_ADS_FREE_UNTIL, 0L)
+    return System.currentTimeMillis() < timestampExpiracao
+}
+
+fun ativar24hSemAnuncios(context: Context) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val tempoExpiracao = System.currentTimeMillis() + (24 * 60 * 60 * 1000L) // 24 horas em ms
+    prefs.edit().putLong(KEY_ADS_FREE_UNTIL, tempoExpiracao).apply()
+}
+
+@Composable
+fun AdBannerWithRewardFrame(
+    semAnunciosAtivo: Boolean,
+    progressoAnuncios: Int,
+    onAssistirAnuncioClique: () -> Unit
+) {
+    if (semAnunciosAtivo) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp) // Alinhado perfeitamente com a largura do box do placar
+            .navigationBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Moldura/Botão no topo do anúncio (acompanha a largura total do placar)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onAssistirAnuncioClique() },
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 7.dp, horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (progressoAnuncios == 1)
+                        stringResource(R.string.assistir_anuncio_recompensa_2)
+                    else
+                        stringResource(R.string.assistir_anuncio_recompensa),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Anúncio de Banner adaptativo
+        BannerAdView(modifier = Modifier.fillMaxWidth())
+    }
+}
+
+// Variável global para guardar o anúncio carregado
+var mInterstitialAd: InterstitialAd? = null
+
+fun carregarInterstitial(context: android.content.Context) {
+    val testInterstitialId = "ca-app-pub-3940256099942544/1033173712"
+    val adRequest = AdRequest.Builder().build()
+
+    InterstitialAd.load(
+        context,
+        testInterstitialId,
+        adRequest,
+        object : InterstitialAdLoadCallback() {
+            override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                mInterstitialAd = interstitialAd
+            }
+
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                mInterstitialAd = null
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)

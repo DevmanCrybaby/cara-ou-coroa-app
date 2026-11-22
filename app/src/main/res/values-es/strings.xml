@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cara o Cruz</string>
+    <string name="gire_moeda">¡Lanza la moneda!</string>
+    <string name="girando">Girando...</string>
+    <string name="modo_unico">Único</string>
+    <string name="modo_multiplo">Múltiple</string>
+    <string name="zerar_placar">Reiniciar marcador</string>
+    <string name="cara">¡Cara!</string>
+    <string name="coroa">¡Cruz!</string>
+    <string name="caras_plural">Caras</string>
+    <string name="coroas_plural">Cruces</string>
+    <string name="resultado_multiplo">%1$d Caras, %2$d Cruces</string>
+    <string name="quantidade_lancamentos">Número de tiradas:</string>
+    <string name="evitar_repeticoes">Evitar rachas largas</string>
+    <string name="maximo_consecutivo">Máximo consecutivo: %1$d</string>
+    <string name="placar_caras">Caras: %1$d</string>
+    <string name="placar_coroas">Cruces: %1$d</string>
+    <string name="assistir_anuncio_recompensa">Ver un video para 24h sin anuncios</string>
+    <string name="assistir_anuncio_recompensa_2">Ver video 2/2 para 24h sin anuncios</string>
+    <string name="anuncio_assistido_1">¡Anuncio 1/2 visto! Ve 1 más para activar 24h sin anuncios.</string>
+    <string name="anuncios_desativados_sucesso">🎉 ¡Felicidades! ¡Activaste 24 horas sin anuncios!</string>
+    <string name="carregando_video">Cargando video... Inténtalo de nuevo en unos instantes.</string>
+</resources>

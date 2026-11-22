@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Coin Flip</string>
+    <string name="gire_moeda">Flip the coin!</string>
+    <string name="girando">Flipping...</string>
+    <string name="modo_unico">Single</string>
+    <string name="modo_multiplo">Multiple</string>
+    <string name="zerar_placar">Reset Score</string>
+    <string name="cara">Heads!</string>
+    <string name="coroa">Tails!</string>
+    <string name="caras_plural">Heads</string>
+    <string name="coroas_plural">Tails</string>
+    <string name="resultado_multiplo">%1$d Heads, %2$d Tails</string>
+    <string name="quantidade_lancamentos">Number of flips:</string>
+    <string name="evitar_repeticoes">Prevent long streaks</string>
+    <string name="maximo_consecutivo">Max consecutive: %1$d</string>
+    <string name="placar_caras">Heads: %1$d</string>
+    <string name="placar_coroas">Tails: %1$d</string>
+    <string name="assistir_anuncio_recompensa">Watch a video for 24h ad-free</string>
+    <string name="assistir_anuncio_recompensa_2">Watch video 2/2 for 24h ad-free</string>
+    <string name="anuncio_assistido_1">Ad 1/2 watched! Watch 1 more to activate 24h ad-free.</string>
+    <string name="anuncios_desativados_sucesso">🎉 Congratulations! You activated 24 hours ad-free!</string>
+    <string name="carregando_video">Loading video... Try again in a moment.</string>
+</resources>

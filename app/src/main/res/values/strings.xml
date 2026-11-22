@@ -1,3 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Cara ou coroa</string>
+    <string name="app_name">Cara ou Coroa</string>
+    <string name="gire_moeda">Jogue a moeda!</string>
+    <string name="girando">Girando...</string>
+    <string name="modo_unico">Único</string>
+    <string name="modo_multiplo">Múltiplo</string>
+    <string name="zerar_placar">Zerar Placar</string>
+    <string name="cara">Cara!</string>
+    <string name="coroa">Coroa!</string>
+    <string name="caras_plural">Caras</string>
+    <string name="coroas_plural">Coroas</string>
+    <string name="resultado_multiplo">%1$d Caras, %2$d Coroas</string>
+    <string name="quantidade_lancamentos">Quantidade de lançamentos:</string>
+    <string name="evitar_repeticoes">Evitar repetições longas</string>
+    <string name="maximo_consecutivo">Máximo consecutivo: %1$d</string>
+    <string name="placar_caras">Caras: %1$d</string>
+    <string name="placar_coroas">Coroas: %1$d</string>
+    <string name="assistir_anuncio_recompensa">Assistir a um vídeo para 24h sem anúncios</string>
+    <string name="assistir_anuncio_recompensa_2">Assistir vídeo 2/2 para 24h sem anúncios</string>
+    <string name="anuncio_assistido_1">Anúncio 1/2 assistido! Assista mais 1 para ativar 24h sem anúncios.</string>
+    <string name="anuncios_desativados_sucesso">🎉 Parabéns! Você ativou 24 horas sem anúncios!</string>
+    <string name="carregando_video">Carregando vídeo... Tente novamente em instantes.</string>
 </resources>
